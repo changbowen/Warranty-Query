@@ -18,4 +18,5 @@ Warranty query tool that support batch operations using httpwebrequests. Current
 <h2>Note</h2>
 <ul>
 	<li>Lenovo US and CN may return different warranty information.</li>
+	<li>It is not very hard to add support for other brands as long as the website accept web requests for warranty query.</li>
 </ul>
