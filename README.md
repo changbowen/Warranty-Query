@@ -15,6 +15,10 @@ Warranty query tool that support batch operations using httpwebrequests. Current
 	<li>Support copy &amp; paste from &amp; to the form.</li>
 	<li>Returning calculated start date and end date of warranty as well as the raw response as string.</li>
 </ul>
+<h2>Updates</h2>
+<ul>
+	<li>Added: if your account has permission to connect to a remote WMI, you may put computer name or IP address in "Name / IP" column and the program will try to get Login, Serial and Model via LAN.</li>
+</ul>
 <h2>Note</h2>
 <ul>
 	<li>Lenovo US and CN may return different warranty information.</li>
