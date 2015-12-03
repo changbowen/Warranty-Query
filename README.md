@@ -1,4 +1,4 @@
-# Warranty-Query
+# Warranty Query
 Warranty query tool that support batch operations using httpwebrequests.
 <h2>Motivation</h2>
 Warranty query tool that support batch operations using httpwebrequests. Currently supports Lenovo, Dell machines.
