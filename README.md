@@ -3,7 +3,7 @@ Warranty query tool that support batch operations using httpwebrequests.
 <h2>Motivation</h2>
 Warranty query tool that support batch operations using httpwebrequests. Currently supports Lenovo, Dell machines.
 <h2>Screenshot</h2>
-<img class="alignnone size-full wp-image-15" src="http://carlchang.blog.com/files/2015/12/Screenshot_WQ.png" alt="" width="696" height="410" />
+<img class="alignnone size-full wp-image-15" src="http://carlchang.blog.com/files/2015/12/Screenshot_WQ.png" width="696" height="410" />
 <h2>Language &amp; Requirement</h2>
 <ul>
 	<li>VB application written in VB.net</li>
