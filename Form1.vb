@@ -79,42 +79,69 @@ Public Class WarrantyQuery
                             End Using
                         End Using
                         Dim respxml = Newtonsoft.Json.JsonConvert.DeserializeXNode(respstr, "ResultForm").Root
+                        Dim respxml_status = respxml.Element("status").Value
                         Dim rawstr = Newtonsoft.Json.Linq.JObject.Parse(respstr).ToString
-                        Dim startdate = Date.MaxValue, enddate = Date.MinValue
-                        If respxml.Elements("ServiceData").Any Then
-                            Dim tmpnode = respxml.Element("ServiceData")
-                            If tmpnode.Elements("ServiceStartDate").Any Then
-                                Dim tmpdate As Date
-                                If Date.TryParse(tmpnode.Element("ServiceStartDate").Value.Trim, tmpdate) Then
-                                    If startdate > tmpdate Then startdate = tmpdate
-                                End If
-                            End If
-                            If tmpnode.Elements("ServiceEndDate").Any Then
-                                Dim tmpdate As Date
-                                If Date.TryParse(tmpnode.Element("ServiceEndDate").Value.Trim, tmpdate) Then
-                                    If enddate < tmpdate Then enddate = tmpdate
-                                End If
-                            End If
-                        ElseIf respxml.Elements("WarrantyData").Any Then
-                            For Each ele In respxml.Element("WarrantyData").Elements
-                                If ele.Name.LocalName.ToLower.Contains("startdate") Then
+
+                        If respxml_status = "200" Then 'indicates success
+                            Dim startdate = Date.MaxValue, enddate = Date.MinValue
+                            If respxml.Elements("ServiceData").Any Then
+                                Dim tmpnode = respxml.Element("ServiceData")
+                                If tmpnode.Elements("ServiceStartDate").Any Then
                                     Dim tmpdate As Date
-                                    If Date.TryParse(ele.Value, tmpdate) Then
+                                    If Date.TryParse(tmpnode.Element("ServiceStartDate").Value.Trim, tmpdate) Then
                                         If startdate > tmpdate Then startdate = tmpdate
                                     End If
-                                ElseIf ele.Name.LocalName.ToLower.Contains("enddate") Then
+                                End If
+                                If tmpnode.Elements("ServiceEndDate").Any Then
                                     Dim tmpdate As Date
-                                    If Date.TryParse(ele.Value, tmpdate) Then
+                                    If Date.TryParse(tmpnode.Element("ServiceEndDate").Value.Trim, tmpdate) Then
                                         If enddate < tmpdate Then enddate = tmpdate
                                     End If
                                 End If
+                            ElseIf respxml.Elements("WarrantyData").Any Then
+                                For Each ele In respxml.Element("WarrantyData").Elements
+                                    If ele.Name.LocalName.ToLower.Contains("startdate") Then
+                                        Dim tmpdate As Date
+                                        If Date.TryParse(ele.Value, tmpdate) Then
+                                            If startdate > tmpdate Then startdate = tmpdate
+                                        End If
+                                    ElseIf ele.Name.LocalName.ToLower.Contains("enddate") Then
+                                        Dim tmpdate As Date
+                                        If Date.TryParse(ele.Value, tmpdate) Then
+                                            If enddate < tmpdate Then enddate = tmpdate
+                                        End If
+                                    End If
+                                Next
+                            Else
+                                Throw New Exception("Error getting warranty information." & vbCrLf & rawstr)
+                            End If
+                            Dim winfo = New WarrantyInfo(_si, If(startdate = Date.MaxValue, "", startdate.ToString("yyyy-MM-dd")), If(enddate = Date.MinValue, "", enddate.ToString("yyyy-MM-dd")), rawstr)
+                            infolist.Add(winfo)
+                            RaiseEvent SingleQueryReturned(winfo)
+                        ElseIf respxml_status = "102" Then 'indicates multiple categoryid found
+                            Throw New Exception("Multiple category ID found. Please use lenovo website for this." & vbCrLf & rawstr)
+                        ElseIf respxml_status = "103" Then 'this is a redirect
+                            Dim request_sub = WebRequest.CreateHttp(respxml.Element("message").Value)
+                            Dim resphtml As New HtmlAgilityPack.HtmlDocument
+                            Using resp = request_sub.GetResponse
+                                resphtml.Load(resp.GetResponseStream, System.Text.Encoding.UTF8)
+                            End Using
+                            Dim rawstr_sub = ""
+                            For Each n In resphtml.DocumentNode.SelectNodes("//*[@class='ssjg140806_left_top_r_list']")
+                                rawstr_sub += n.InnerText.Trim.Replace(vbCrLf, "").Replace(" ", "") & vbCrLf
                             Next
+                            Dim startdate = resphtml.GetElementbyId("litCreateDate_LK").InnerText
+                            Dim enddate = resphtml.GetElementbyId("lblPartEndDate_LK").InnerText
+
+                            Dim winfo = New WarrantyInfo(_si, startdate, enddate, rawstr_sub)
+                            infolist.Add(winfo)
+                            RaiseEvent SingleQueryReturned(winfo)
+                            Stop
+                        ElseIf respxml_status = "101" Then 'indicates not found
+                            Throw New Exception("Serial number not found." & vbCrLf & rawstr)
                         Else
-                            Throw New Exception("Warranty information unavailable / Multiple models found." & vbCrLf & rawstr)
+                            Throw New Exception("Error getting warranty information." & vbCrLf & rawstr)
                         End If
-                        Dim winfo = New WarrantyInfo(_si, If(startdate = Date.MaxValue, "", startdate.ToString("yyyy-MM-dd")), If(enddate = Date.MinValue, "", enddate.ToString("yyyy-MM-dd")), rawstr)
-                        infolist.Add(winfo)
-                        RaiseEvent SingleQueryReturned(winfo)
                     Catch ex As Exception
                         Dim winfo = New WarrantyInfo(_si, "", "", ex.Message)
                         infolist.Add(winfo)
@@ -146,18 +173,28 @@ Public Class WarrantyQuery
                                 rsphtml.Load(resp.GetResponseStream)
                             End Using
                         End Using
-                        Dim rawstr As String = ""
-                        For Each n In rsphtml.DocumentNode.SelectNodes("//*[@class='cell2']")
-                            rawstr += n.InnerText.Trim.Replace(vbCrLf, "").Replace(" ", "") & vbCrLf
-                        Next
-                        Try
-                            Dim wrntynodes = rsphtml.GetElementbyId("warranty_result_div").SelectNodes("div")
-                            Dim winfo = New WarrantyInfo(_si, wrntynodes(0).InnerText.Split(":"c)(1).Trim, wrntynodes(1).InnerText.Split(":"c)(1).Trim, rawstr.Trim)
-                            infolist.Add(winfo)
-                            RaiseEvent SingleQueryReturned(winfo)
-                        Catch
-                            Throw New Exception("Warranty information unavailable." & vbCrLf & rawstr)
-                        End Try
+                        Dim rawstr As String = rsphtml.DocumentNode.InnerHtml
+                        Dim rsphtml_status = rsphtml.GetElementbyId("errorMessage")
+                        If rsphtml_status IsNot Nothing Then
+                            If rsphtml_status.Attributes("value").Value = "" Then 'indicates no error msg
+                                Dim rawstra = ""
+                                For Each n In rsphtml.DocumentNode.SelectNodes("//*[@class='cell2']")
+                                    rawstra += n.InnerText.Trim.Replace(vbCrLf, "").Replace(" ", "") & vbCrLf
+                                Next
+                                Try
+                                    Dim wrntynodes = rsphtml.GetElementbyId("warranty_result_div").SelectNodes("div")
+                                    Dim winfo = New WarrantyInfo(_si, wrntynodes(0).InnerText.Split(":"c)(1).Trim, wrntynodes(1).InnerText.Split(":"c)(1).Trim, rawstra.Trim)
+                                    infolist.Add(winfo)
+                                    RaiseEvent SingleQueryReturned(winfo)
+                                Catch
+                                    Throw New Exception("Error getting warranty information." & vbCrLf & rawstr)
+                                End Try
+                            Else
+                                Throw New Exception(rsphtml_status.Attributes("value").Value & vbCrLf & rawstr)
+                            End If
+                        Else
+                            Throw New Exception("Error getting warranty information." & vbCrLf & rawstr)
+                        End If
                     Catch ex As Exception
                         Dim winfo = New WarrantyInfo(_si, "", "", ex.Message)
                         infolist.Add(winfo)
@@ -210,7 +247,7 @@ Public Class WarrantyQuery
                             infolist.Add(winfo)
                             RaiseEvent SingleQueryReturned(winfo)
                         Else
-                            Throw New Exception("Warranty information unavailable." & rspxml.ToString)
+                            Throw New Exception("Error getting warranty information." & vbCrLf & rspxml.ToString)
                         End If
                     Catch ex As Exception
                         Dim winfo = New WarrantyInfo(_si, "", "", ex.Message)
@@ -299,10 +336,39 @@ Public Class WarrantyQuery
             MsgBox("List is empty.", MsgBoxStyle.Exclamation)
             Exit Sub
         End If
+
+        FreezeUI(True)
+        Dim lst As New List(Of SerialInfo)
         For Each row As DataGridViewRow In DGV.Rows
             If row.Cells("C_Serial").Value = "" Then
-                MsgBox("Serial cannot be empty.", MsgBoxStyle.Exclamation)
-                Exit Sub
+                If row.Cells("C_Name").Value = "" Then
+                    MsgBox("Name or serial is required for query.", MsgBoxStyle.Exclamation)
+                    FreezeUI(False)
+                    Exit Sub
+                Else
+                    Await Task.Run(
+                          Sub()
+                              Try
+                                  Invoke(Sub() row.Cells("C_Serial").Value = "Querying...")
+                                  Using wmiSearcher As New Management.ManagementObjectSearcher("\\" & row.Cells("C_Name").Value & "\root\cimv2", "select IdentifyingNumber, Name from Win32_ComputerSystemProduct")
+                                      For Each inst In wmiSearcher.Get
+                                          Dim ser = inst("IdentifyingNumber").ToString
+                                          Dim mdl = inst("Name").ToString
+                                          Invoke(Sub()
+                                                     row.Cells("C_Serial").Value = ser
+                                                     row.Cells("C_Model").Value = mdl
+                                                     lst.Add(New SerialInfo(row.Index, row.Cells("C_Serial").Value, row.Cells("C_Model").Value))
+                                                 End Sub)
+                                          Exit For
+                                      Next
+                                  End Using
+                              Catch ex As Exception
+                                  Invoke(Sub() row.Cells("C_Serial").Value = "Error getting serial number." & vbCrLf & ex.Message)
+                              End Try
+                          End Sub)
+                End If
+            Else
+                lst.Add(New SerialInfo(row.Index, row.Cells("C_Serial").Value, row.Cells("C_Model").Value))
             End If
         Next
 
@@ -310,11 +376,7 @@ Public Class WarrantyQuery
         'Query({New SerialInfo("34KRQV1", "2518B77"), New SerialInfo("34KRQV1", "291223C")}, Website.Lenovo_CN)
 
         'rowscast.Where(Function(r As DataGridViewRow) r.Cells(0).Value.ToString.Equals(1))
-        FreezeUI(True)
-        Dim lst As New List(Of SerialInfo)
-        For Each row As DataGridViewRow In DGV.Rows
-            lst.Add(New SerialInfo(row.Index, row.Cells("C_Serial").Value, row.Cells("C_Model").Value))
-        Next
+        'FreezeUI(True)
 
         Dim site = CB_Site.Text
         Await Task.Run(Sub() Query(lst.ToArray, [Enum].Parse(GetType(Website), site)))
@@ -376,23 +438,12 @@ Public Class WarrantyQuery
         DGV.Select()
         DGV.Rows.Add()
         CB_Site.Items.AddRange([Enum].GetNames(GetType(Website)))
+        For Each col As DataGridViewColumn In DGV.Columns
+            If col.ReadOnly Then col.DefaultCellStyle.BackColor = Color.LightGray
+        Next
 
         AddHandler SingleQueryReturned,
             Sub(_wi As WarrantyInfo)
-                'no need for these with id now as index
-                ''Dim rowcol = From row In rowscast
-                ''             Where row.Cells("C_Serial").Value = _wi.target.serial AndAlso row.Cells("C_Model").Value = _wi.target.model
-                ''             Select row
-                ''linq is faster in query but reading rowcol(0) is a bit slow. overall the "for each" wins. tested with over 170000 rows.
-                'For Each row As DataGridViewRow In DGV.Rows
-                '    If row.Cells("C_Serial").Value = _wi.target.serial AndAlso row.Cells("C_Model").Value = _wi.target.model Then
-                '        row.Cells("C_Start").Value = _wi.start_date
-                '        row.Cells("C_End").Value = _wi.end_date
-                '        row.Cells("C_Raw").Value = _wi.raw_str
-                '        DGV.Refresh()
-                '        Exit For
-                '    End If
-                'Next
                 Invoke(Sub()
                            Dim row = DGV.Rows(_wi.target.id)
                            row.Cells("C_Start").Value = _wi.start_date

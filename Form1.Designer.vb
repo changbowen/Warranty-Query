@@ -31,11 +31,13 @@ Partial Class WarrantyQuery
         Me.Btn_AddBelow = New System.Windows.Forms.Button()
         Me.Btn_Del = New System.Windows.Forms.Button()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
-        Me.C_Serial = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.C_Model = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.C_Start = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.C_End = New System.Windows.Forms.DataGridViewTextBoxColumn()
         Me.C_Raw = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.C_End = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.C_Start = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.C_Model = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.C_Serial = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.C_User = New System.Windows.Forms.DataGridViewTextBoxColumn()
+        Me.C_Name = New System.Windows.Forms.DataGridViewTextBoxColumn()
         CType(Me.DGV, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
@@ -43,7 +45,7 @@ Partial Class WarrantyQuery
         'Btn_Query
         '
         Me.Btn_Query.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.Btn_Query.Location = New System.Drawing.Point(575, 47)
+        Me.Btn_Query.Location = New System.Drawing.Point(843, 47)
         Me.Btn_Query.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.Btn_Query.Name = "Btn_Query"
         Me.Btn_Query.Size = New System.Drawing.Size(93, 43)
@@ -57,7 +59,7 @@ Partial Class WarrantyQuery
         Me.CB_Site.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         Me.CB_Site.FormattingEnabled = True
         Me.CB_Site.ItemHeight = 16
-        Me.CB_Site.Location = New System.Drawing.Point(575, 16)
+        Me.CB_Site.Location = New System.Drawing.Point(843, 16)
         Me.CB_Site.Name = "CB_Site"
         Me.CB_Site.Size = New System.Drawing.Size(93, 24)
         Me.CB_Site.TabIndex = 1
@@ -66,7 +68,7 @@ Partial Class WarrantyQuery
         '
         Me.Btn_Exit.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.Btn_Exit.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.Btn_Exit.Location = New System.Drawing.Point(575, 332)
+        Me.Btn_Exit.Location = New System.Drawing.Point(843, 359)
         Me.Btn_Exit.Margin = New System.Windows.Forms.Padding(3, 4, 3, 4)
         Me.Btn_Exit.Name = "Btn_Exit"
         Me.Btn_Exit.Size = New System.Drawing.Size(93, 27)
@@ -81,12 +83,12 @@ Partial Class WarrantyQuery
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.DGV.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DGV.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.C_Serial, Me.C_Model, Me.C_Start, Me.C_End, Me.C_Raw})
+        Me.DGV.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.C_Name, Me.C_User, Me.C_Serial, Me.C_Model, Me.C_Start, Me.C_End, Me.C_Raw})
         Me.DGV.Location = New System.Drawing.Point(12, 16)
         Me.DGV.Name = "DGV"
         Me.DGV.RowTemplate.Height = 23
         Me.DGV.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect
-        Me.DGV.Size = New System.Drawing.Size(557, 343)
+        Me.DGV.Size = New System.Drawing.Size(825, 370)
         Me.DGV.TabIndex = 4
         '
         'Btn_AddAbove
@@ -125,34 +127,12 @@ Partial Class WarrantyQuery
         Me.GroupBox1.Controls.Add(Me.Btn_AddAbove)
         Me.GroupBox1.Controls.Add(Me.Btn_Del)
         Me.GroupBox1.Controls.Add(Me.Btn_AddBelow)
-        Me.GroupBox1.Location = New System.Drawing.Point(576, 97)
+        Me.GroupBox1.Location = New System.Drawing.Point(844, 97)
         Me.GroupBox1.Name = "GroupBox1"
         Me.GroupBox1.Size = New System.Drawing.Size(92, 125)
         Me.GroupBox1.TabIndex = 8
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "Edit"
-        '
-        'C_Serial
-        '
-        Me.C_Serial.HeaderText = "Serial"
-        Me.C_Serial.Name = "C_Serial"
-        '
-        'C_Model
-        '
-        Me.C_Model.HeaderText = "Model"
-        Me.C_Model.Name = "C_Model"
-        '
-        'C_Start
-        '
-        Me.C_Start.HeaderText = "Start Date"
-        Me.C_Start.Name = "C_Start"
-        Me.C_Start.ReadOnly = True
-        '
-        'C_End
-        '
-        Me.C_End.HeaderText = "End Date"
-        Me.C_End.Name = "C_End"
-        Me.C_End.ReadOnly = True
         '
         'C_Raw
         '
@@ -164,13 +144,49 @@ Partial Class WarrantyQuery
         Me.C_Raw.Name = "C_Raw"
         Me.C_Raw.ReadOnly = True
         '
+        'C_End
+        '
+        Me.C_End.HeaderText = "End Date"
+        Me.C_End.Name = "C_End"
+        Me.C_End.ReadOnly = True
+        '
+        'C_Start
+        '
+        Me.C_Start.HeaderText = "Start Date"
+        Me.C_Start.Name = "C_Start"
+        Me.C_Start.ReadOnly = True
+        '
+        'C_Model
+        '
+        Me.C_Model.HeaderText = "Model"
+        Me.C_Model.Name = "C_Model"
+        '
+        'C_Serial
+        '
+        Me.C_Serial.HeaderText = "Serial"
+        Me.C_Serial.Name = "C_Serial"
+        '
+        'C_User
+        '
+        Me.C_User.HeaderText = "Login"
+        Me.C_User.Name = "C_User"
+        Me.C_User.ReadOnly = True
+        '
+        'C_Name
+        '
+        Me.C_Name.HeaderText = "Name / IP"
+        Me.C_Name.Name = "C_Name"
+        Me.C_Name.ToolTipText = "If your account has permission to connect to a remote WMI, you may fill computer " & _
+    "name or IP address here and the program will try to get Login, Serial and Model " & _
+    "via LAN."
+        '
         'WarrantyQuery
         '
         Me.AcceptButton = Me.Btn_Query
         Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.Btn_Exit
-        Me.ClientSize = New System.Drawing.Size(680, 372)
+        Me.ClientSize = New System.Drawing.Size(948, 399)
         Me.Controls.Add(Me.GroupBox1)
         Me.Controls.Add(Me.DGV)
         Me.Controls.Add(Me.Btn_Exit)
@@ -193,6 +209,8 @@ Partial Class WarrantyQuery
     Friend WithEvents Btn_AddBelow As System.Windows.Forms.Button
     Friend WithEvents Btn_Del As System.Windows.Forms.Button
     Friend WithEvents GroupBox1 As System.Windows.Forms.GroupBox
+    Friend WithEvents C_Name As System.Windows.Forms.DataGridViewTextBoxColumn
+    Friend WithEvents C_User As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents C_Serial As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents C_Model As System.Windows.Forms.DataGridViewTextBoxColumn
     Friend WithEvents C_Start As System.Windows.Forms.DataGridViewTextBoxColumn
