@@ -136,7 +136,6 @@ Public Class WarrantyQuery
                             Dim winfo = New WarrantyInfo(_si, startdate, enddate, rawstr_sub)
                             infolist.Add(winfo)
                             RaiseEvent SingleQueryReturned(winfo)
-                            Stop
                         ElseIf respxml_status = "101" Then 'indicates not found
                             Throw New Exception("Serial number not found." & vbCrLf & rawstr)
                         Else
