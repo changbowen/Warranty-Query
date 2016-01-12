@@ -175,7 +175,9 @@ Public Class WarrantyQuery
                         Dim rawstr As String = rsphtml.DocumentNode.InnerHtml
                         Dim rsphtml_status = rsphtml.GetElementbyId("errorMessage")
                         If rsphtml_status IsNot Nothing Then
-                            If rsphtml_status.Attributes("value").Value = "" Then 'indicates no error msg
+                            If rsphtml_status.Attributes.Contains("value") AndAlso rsphtml_status.Attributes("value").Value <> "" Then 'indicates error msg
+                                Throw New Exception(rsphtml_status.Attributes("value").Value & vbCrLf & rawstr)
+                            Else
                                 Dim rawstra = ""
                                 For Each n In rsphtml.DocumentNode.SelectNodes("//*[@class='cell2']")
                                     rawstra += n.InnerText.Trim.Replace(vbCrLf, "").Replace(" ", "") & vbCrLf
@@ -188,8 +190,6 @@ Public Class WarrantyQuery
                                 Catch
                                     Throw New Exception("Error getting warranty information." & vbCrLf & rawstr)
                                 End Try
-                            Else
-                                Throw New Exception(rsphtml_status.Attributes("value").Value & vbCrLf & rawstr)
                             End If
                         Else
                             Throw New Exception("Error getting warranty information." & vbCrLf & rawstr)
